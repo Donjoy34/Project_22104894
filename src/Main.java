@@ -9,7 +9,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             MainView view = new MainView();
             DataManager model = new DataManager();
-            new SystemController(view, model);
+            view.setOnLoginSuccess(() -> new SystemController(view, model));
 
             view.setVisible(true);
         });
