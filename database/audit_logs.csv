@@ -1,0 +1,5 @@
+id,userId,action,timestamp,detailsA1000,U1000,LOGIN,2026-01-01 15:45:42,User logged in
+A1001,U1000,LOGOUT,2026-01-01 15:45:51,User logged out
+A1002,U1001,LOGIN,2026-01-01 15:46:11,User logged in
+A1003,U1001,LOGOUT,2026-01-01 15:46:32,User logged out
+A1004,U1002,LOGIN,2026-01-01 15:47:06,User logged in

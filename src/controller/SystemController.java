@@ -4,13 +4,18 @@ import model.*;
 import view.MainView;
 import singleton.ReferralManager;
 import javax.swing.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class SystemController {
     private MainView view;
     private DataManager model;
+    private User currentUser;
 
-    public SystemController(MainView view, DataManager model) {
+    public SystemController(MainView view, DataManager model, User currentUser) {
+        this.view = view;
+        this.model = model;
+        this.currentUser = currentUser;
         this.view = view;
         this.model = model;
 
@@ -49,6 +54,9 @@ public class SystemController {
             Patient p = new Patient(newId, fName.getText(), lName.getText(), "1990-01-01", nhs.getText(), "00000", "Unknown Address");
             model.addPatient(p);
             view.addPatientRow(new Object[]{p.getId(), p.getFullName(), p.getDob(), p.getNhsNumber(), "See Detail"});
+            // Log action
+            AuditLog log = new AuditLog("A" + (1000 + model.getAuditLogs().size()), currentUser.getId(), "ADD_PATIENT", LocalDateTime.now(), "Added patient " + p.getFullName());
+            model.addAuditLog(log);
         }
     }
 
@@ -73,6 +81,9 @@ public class SystemController {
             view.addReferralRow(new Object[]{r.getId(), r.getPatientId(), r.getUrgency(), r.getSummary(), "New"});
 
             JOptionPane.showMessageDialog(view, "Referral Processed & Email Generated.");
+            // Log action
+            AuditLog log = new AuditLog("A" + (1000 + model.getAuditLogs().size()), currentUser.getId(), "ADD_REFERRAL", LocalDateTime.now(), "Added referral for patient " + pId.getText());
+            model.addAuditLog(log);
         }
     }
 
@@ -82,5 +93,8 @@ public class SystemController {
         Prescription p = new Prescription(newId, "P001", "Amoxicillin", "500mg", "3 times a day");
         model.addPrescription(p);
         view.addPrescriptionRow(new Object[]{p.getId(), "P001", "Amoxicillin", "500mg"});
+        // Log action
+        AuditLog log = new AuditLog("A" + (1000 + model.getAuditLogs().size()), currentUser.getId(), "ADD_PRESCRIPTION", LocalDateTime.now(), "Added prescription " + p.getMedName());
+        model.addAuditLog(log);
     }
 }
