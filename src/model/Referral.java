@@ -9,6 +9,8 @@ public class Referral {
     private String urgency;
     private String summary;
     private String status;
+    private String specialty;
+    private String createdDate;
 
     public Referral(String id, String pId, String cId, String urgency, String summary, String status) {
         this.id = id;
@@ -17,12 +19,19 @@ public class Referral {
         this.urgency = urgency;
         this.summary = summary;
         this.status = status;
+        this.specialty = "General";
+        this.createdDate = "2025-01-01";
     }
 
     public String getId() { return id; }
     public String getPatientId() { return patientId; }
     public String getUrgency() { return urgency; }
     public String getSummary() { return summary; }
+    public String getStatus() { return status; }
+    public String getSpecialty() { return specialty; }
+    public String getCreatedDate() { return createdDate; }
+
+    public void setSpecialty(String specialty) { this.specialty = specialty; }
 
     public String toCSV() {
         return String.join(",",
