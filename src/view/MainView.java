@@ -35,21 +35,19 @@ public class MainView extends JFrame {
         lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
         add(lblTitle, BorderLayout.NORTH);
 
-        JPanel panelButtons = new JPanel(new GridLayout(1, 5, 5,5));
+        JPanel panelButtons = new JPanel(new GridLayout(2, 3, 10, 10));
         panelButtons.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
-
 
         JButton btnPatient = new JButton("Patient");
         JButton btnGP = new JButton("GP");
+        JButton btnSpecialist = new JButton("Specialist");
         JButton btnNurse = new JButton("Nurse");
         JButton btnReceptionist = new JButton("Receptionist");
         JButton btnAdmin = new JButton("Admin");
-        //btnPatient.setPreferredSize(new Dimension(50, 20));
-        //btnGP.setPreferredSize(new Dimension(120, 60));
 
         panelButtons.add(btnPatient);
         panelButtons.add(btnGP);
+        panelButtons.add(btnSpecialist);
         panelButtons.add(btnNurse);
         panelButtons.add(btnReceptionist);
         panelButtons.add(btnAdmin);
@@ -59,6 +57,7 @@ public class MainView extends JFrame {
         // Button actions
         btnPatient.addActionListener(e -> openLogin(UserRole.PATIENT));
         btnGP.addActionListener(e -> openLogin(UserRole.GP));
+        btnSpecialist.addActionListener(e -> openLogin(UserRole.SPECIALIST));
         btnNurse.addActionListener(e -> openLogin(UserRole.NURSE));
         btnReceptionist.addActionListener(e -> openLogin(UserRole.RECEPTIONIST));
         btnAdmin.addActionListener(e -> openLogin(UserRole.ADMIN));
@@ -85,37 +84,16 @@ public class MainView extends JFrame {
         getContentPane().removeAll();
         setLayout(new BorderLayout());
 
-        // Top panel with buttons
-        JPanel topPanel = new JPanel(new FlowLayout());
-        btnAddPatient = new JButton("Add Patient");
-        btnAddReferral = new JButton("Add Referral");
-        btnAddPrescription = new JButton("Add Prescription");
+        // Create role-based dashboard
+        JPanel dashboard = DashboardFactory.createDashboard(currentUser);
+        add(dashboard, BorderLayout.CENTER);
+
+        // Bottom panel with logout button
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnLogout = new JButton("Logout");
-        topPanel.add(btnAddPatient);
-        topPanel.add(btnAddReferral);
-        topPanel.add(btnAddPrescription);
-        topPanel.add(btnLogout);
-
-        if (currentUser != null && currentUser.getRole() == UserRole.ADMIN) {
-            btnViewHistory = new JButton("View History");
-            topPanel.add(btnViewHistory);
-            btnViewHistory.addActionListener(e -> openHistoryDialog());
-        }
-
-        add(topPanel, BorderLayout.NORTH);
-
-        // Center panel with tables
-        JTabbedPane tabbedPane = new JTabbedPane();
-        patientTable = new JTable(new javax.swing.table.DefaultTableModel(new Object[]{"ID", "Name", "DOB", "NHS", "Details"}, 0));
-        referralTable = new JTable(new javax.swing.table.DefaultTableModel(new Object[]{"ID", "Patient ID", "Urgency", "Summary", "Status"}, 0));
-        prescriptionTable = new JTable(new javax.swing.table.DefaultTableModel(new Object[]{"ID", "Patient ID", "Medication", "Dosage"}, 0));
-
-        tabbedPane.addTab("Patients", new JScrollPane(patientTable));
-        tabbedPane.addTab("Referrals", new JScrollPane(referralTable));
-        tabbedPane.addTab("Prescriptions", new JScrollPane(prescriptionTable));
-        add(tabbedPane, BorderLayout.CENTER);
-
         btnLogout.addActionListener(e -> logout());
+        bottomPanel.add(btnLogout);
+        add(bottomPanel, BorderLayout.SOUTH);
 
         revalidate();
         repaint();
