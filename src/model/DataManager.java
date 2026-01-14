@@ -13,6 +13,7 @@ public class DataManager {
     private List<Prescription> prescriptions = new ArrayList<>();
     private List<User> users = new ArrayList<>();
     private List<AuditLog> auditLogs = new ArrayList<>();
+    private List<Appointment> appointments = new ArrayList<>();
 
     private final String DB_PATH = "database/";
 
@@ -22,6 +23,7 @@ public class DataManager {
         loadPrescriptions();
         loadUsers();
         loadAuditLogs();
+        loadAppointments();
     }
 
     private void loadPatients() {
@@ -149,7 +151,62 @@ public class DataManager {
         }
     }
 
+    private void loadAppointments() {
+        // Ensure file exists
+        File appointmentFile = new File(DB_PATH + "appointments.csv");
+        if (!appointmentFile.exists()) {
+            try (PrintWriter pw = new PrintWriter(new FileWriter(appointmentFile))) {
+                pw.println("appointment_id,patient_id,clinician_id,facility_id,appointment_date,appointment_time,duration_minutes,appointment_type,status,reason_for_visit,notes,created_date,last_modified");
+            } catch (IOException e) { e.printStackTrace(); }
+            return;
+        }
+        try (BufferedReader br = new BufferedReader(new FileReader(appointmentFile))) {
+            String line;
+            br.readLine(); // skip header
+            while ((line = br.readLine()) != null) {
+                List<String> data = CSVUtils.parseLine(line);
+                if (data.size() >= 9) {
+                    appointments.add(new Appointment(
+                        data.get(0).trim(), // id
+                        data.get(1).trim(), // patientId
+                        data.get(2).trim(), // providerId
+                        java.time.LocalDateTime.parse(data.get(4).trim() + " " + data.get(5).trim(), 
+                            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), // appointmentTime
+                        data.get(8).trim(), // status
+                        data.get(10).trim() // notes
+                    ));
+                }
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    public void addAppointment(Appointment a) {
+        appointments.add(a);
+        appendToFile("appointments.csv", a.toCSV());
+    }
+
+    public void cancelAppointment(String appointmentId) {
+        for (Appointment a : appointments) {
+            if (a.getId().equals(appointmentId)) {
+                a.setStatus("CANCELLED");
+                break;
+            }
+        }
+        // Update CSV
+        rewriteAppointmentsCSV();
+    }
+
+    public void rewriteAppointmentsCSV() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(DB_PATH + "appointments.csv"))) {
+            pw.println("appointment_id,patient_id,clinician_id,facility_id,appointment_date,appointment_time,duration_minutes,appointment_type,status,reason_for_visit,notes,created_date,last_modified");
+            for (Appointment a : appointments) {
+                pw.println(a.toCSV());
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
     public List<Patient> getPatients() { return patients; }
     public List<Referral> getReferrals() { return referrals; }
+    public List<Appointment> getAppointments() { return appointments; }
     public List<Prescription> getPrescriptions() { return prescriptions; }
 }

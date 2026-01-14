@@ -31,9 +31,14 @@ public class Appointment {
     // Setters
     public void setStatus(String status) { this.status = status; }
     public void setNotes(String notes) { this.notes = notes; }
+    public void setAppointmentTime(LocalDateTime appointmentTime) { this.appointmentTime = appointmentTime; }
 
     public String toCSV() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return id + "," + patientId + "," + providerId + "," + appointmentTime.format(formatter) + "," + status + "," + notes;
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter fullFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return id + "," + patientId + "," + providerId + ",S001," + 
+               appointmentTime.format(dateFormatter) + "," + appointmentTime.format(timeFormatter) + 
+               ",30,Consultation," + status + ",Visit," + notes + "," + appointmentTime.format(fullFormatter) + "," + appointmentTime.format(fullFormatter);
     }
 }

@@ -1,15 +1,18 @@
 package view;
 
 import model.User;
+import model.DataManager;
 import util.AccessControl;
 import javax.swing.*;
 import java.awt.*;
 
 public class AdminDashboard extends JPanel {
     private User admin;
+    private DataManager dataManager;
 
-    public AdminDashboard(User admin) {
+    public AdminDashboard(User admin, DataManager dataManager) {
         this.admin = admin;
+        this.dataManager = dataManager;
         setLayout(new BorderLayout());
 
         // Title

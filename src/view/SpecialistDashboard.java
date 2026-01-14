@@ -1,15 +1,18 @@
 package view;
 
 import model.User;
+import model.DataManager;
 import util.AccessControl;
 import javax.swing.*;
 import java.awt.*;
 
 public class SpecialistDashboard extends JPanel {
     private User specialist;
+    private DataManager dataManager;
 
-    public SpecialistDashboard(User specialist) {
+    public SpecialistDashboard(User specialist, DataManager dataManager) {
         this.specialist = specialist;
+        this.dataManager = dataManager;
         setLayout(new BorderLayout());
 
         // Title

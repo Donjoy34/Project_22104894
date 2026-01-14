@@ -26,6 +26,20 @@ public class Vitals {
         this.timestamp = timestamp;
     }
 
+    // Simple constructor for quick vital signs recording
+    public Vitals(String patientId, int bpSys, int bpDias, double temp, int hr, double weight) {
+        this.id = java.util.UUID.randomUUID().toString().substring(0, 8);
+        this.patientId = patientId;
+        this.nurseName = "Nurse";
+        this.bloodPressureSystolic = bpSys;
+        this.bloodPressureDiastolic = bpDias;
+        this.temperature = temp;
+        this.heartRate = hr;
+        this.weight = weight;
+        this.notes = "";
+        this.timestamp = java.time.LocalDateTime.now().toString();
+    }
+
     // Getters
     public String getId() { return id; }
     public String getPatientId() { return patientId; }

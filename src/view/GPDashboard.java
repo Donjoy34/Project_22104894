@@ -1,15 +1,18 @@
 package view;
 
 import model.User;
+import model.DataManager;
 import util.AccessControl;
 import javax.swing.*;
 import java.awt.*;
 
 public class GPDashboard extends JPanel {
     private User gp;
+    private DataManager dataManager;
 
-    public GPDashboard(User gp) {
+    public GPDashboard(User gp, DataManager dataManager) {
         this.gp = gp;
+        this.dataManager = dataManager;
         setLayout(new BorderLayout());
 
         // Title
