@@ -31,6 +31,8 @@ public class Referral {
     public String getSpecialty() { return specialty; }
     public String getCreatedDate() { return createdDate; }
 
+    public void setSpecialty(String specialty) { this.specialty = specialty; }
+
     public String toCSV() {
         return String.join(",",
                 id, patientId, clinicianId, "RefToC", "RefFac", "RefToFac", "2025-01-01",
