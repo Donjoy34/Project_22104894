@@ -85,7 +85,7 @@ public class MainView extends JFrame {
         setLayout(new BorderLayout());
 
         // Create role-based dashboard
-        JPanel dashboard = DashboardFactory.createDashboard(currentUser);
+        JPanel dashboard = DashboardFactory.createDashboard(currentUser, model);
         add(dashboard, BorderLayout.CENTER);
 
         // Bottom panel with logout button

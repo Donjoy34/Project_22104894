@@ -1,13 +1,13 @@
 package view;
 
 import model.User;
-import util.AccessControl;
+import model.DataManager;
 import javax.swing.*;
 import java.awt.*;
 
 public class DashboardFactory {
     
-    public static JPanel createDashboard(User user) {
+    public static JPanel createDashboard(User user, DataManager model) {
         switch(user.getRole()) {
             case PATIENT:
                 return new PatientDashboard(user);
@@ -20,7 +20,7 @@ public class DashboardFactory {
             case RECEPTIONIST:
                 return new ReceptionistDashboard(user);
             case ADMIN:
-                return new AdminDashboard(user);
+                return new AdminDashboard(user, model);
             default:
                 return new JPanel();
         }
