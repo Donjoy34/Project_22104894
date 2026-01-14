@@ -4,6 +4,8 @@ import model.User;
 import model.DataManager;
 import model.Patient;
 import model.Appointment;
+import model.Staff;
+import model.Clinician;
 import util.AccessControl;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -24,56 +26,48 @@ public class ReceptionistDashboard extends JPanel {
         setLayout(new BorderLayout());
 
         // Title
-        JLabel title = new JLabel("Receptionist Dashboard - " + receptionist.getUsername(), SwingConstants.CENTER);
+        JLabel title = new JLabel("Receptionist Dashboard", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 18));
         add(title, BorderLayout.NORTH);
 
-        // Button panel
-        JPanel buttonPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        // Button panel - 2x3 grid
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 3, 10, 10));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        if (AccessControl.hasPermission(UserRole.RECEPTIONIST, "REGISTER_PATIENT")) {
-            JButton btnRegisterPatient = new JButton("Register New Patient");
-            btnRegisterPatient.addActionListener(e -> registerPatientDialog());
-            buttonPanel.add(btnRegisterPatient);
-        }
+        JButton btnCreatePatient = new JButton("Create Patient");
+        btnCreatePatient.addActionListener(e -> createPatientDialog());
+        buttonPanel.add(btnCreatePatient);
 
-        if (AccessControl.hasPermission(UserRole.RECEPTIONIST, "BOOK_APPOINTMENT")) {
-            JButton btnBookAppointment = new JButton("Book Appointment");
-            btnBookAppointment.addActionListener(e -> bookAppointmentDialog());
-            buttonPanel.add(btnBookAppointment);
-        }
+        JButton btnViewPatients = new JButton("View Patients");
+        btnViewPatients.addActionListener(e -> viewPatientsDialog());
+        buttonPanel.add(btnViewPatients);
 
-        if (AccessControl.hasPermission(UserRole.RECEPTIONIST, "RESCHEDULE_APPOINTMENT")) {
-            JButton btnRescheduleAppointment = new JButton("Reschedule Appointment");
-            btnRescheduleAppointment.addActionListener(e -> rescheduleAppointmentDialog());
-            buttonPanel.add(btnRescheduleAppointment);
-        }
+        JButton btnViewStaff = new JButton("View Staff");
+        btnViewStaff.addActionListener(e -> viewStaffDialog());
+        buttonPanel.add(btnViewStaff);
 
-        if (AccessControl.hasPermission(UserRole.RECEPTIONIST, "CANCEL_APPOINTMENT")) {
-            JButton btnCancelAppointment = new JButton("Cancel Appointment");
-            btnCancelAppointment.addActionListener(e -> cancelAppointmentDialog());
-            buttonPanel.add(btnCancelAppointment);
-        }
+        JButton btnViewClinicians = new JButton("View Clinicians");
+        btnViewClinicians.addActionListener(e -> viewCliniciansDialog());
+        buttonPanel.add(btnViewClinicians);
 
-        if (AccessControl.hasPermission(UserRole.RECEPTIONIST, "CHECK_IN_PATIENT")) {
-            JButton btnCheckIn = new JButton("Check-In Patient");
-            btnCheckIn.addActionListener(e -> checkInPatientDialog());
-            buttonPanel.add(btnCheckIn);
-        }
+        JButton btnViewAppointments = new JButton("View Appointments");
+        btnViewAppointments.addActionListener(e -> viewAppointmentsDialog());
+        buttonPanel.add(btnViewAppointments);
 
         add(buttonPanel, BorderLayout.CENTER);
     }
 
-    private void registerPatientDialog() {
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Register New Patient", true);
-        dialog.setSize(450, 400);
+    private void createPatientDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Create Patient", true);
+        dialog.setSize(600, 700);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout(10, 10));
 
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new GridLayout(7, 2, 5, 10));
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel contentPanel = new JPanel(new GridLayout(0, 2, 10, 10));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        dialog.add(scrollPane, BorderLayout.CENTER);
 
         contentPanel.add(new JLabel("First Name:"));
         JTextField firstNameField = new JTextField();
@@ -83,35 +77,59 @@ public class ReceptionistDashboard extends JPanel {
         JTextField lastNameField = new JTextField();
         contentPanel.add(lastNameField);
 
+        contentPanel.add(new JLabel("Date of Birth (YYYY-MM-DD):"));
+        JTextField dobField = new JTextField("1990-01-01");
+        contentPanel.add(dobField);
+
         contentPanel.add(new JLabel("NHS Number:"));
         JTextField nhsNumberField = new JTextField();
         contentPanel.add(nhsNumberField);
+
+        contentPanel.add(new JLabel("Gender:"));
+        String[] genders = {"M", "F", "Other"};
+        JComboBox<String> genderCombo = new JComboBox<>(genders);
+        contentPanel.add(genderCombo);
+
+        contentPanel.add(new JLabel("Phone Number:"));
+        JTextField phoneField = new JTextField();
+        contentPanel.add(phoneField);
 
         contentPanel.add(new JLabel("Email:"));
         JTextField emailField = new JTextField();
         contentPanel.add(emailField);
 
-        contentPanel.add(new JLabel("Phone:"));
-        JTextField phoneField = new JTextField();
-        contentPanel.add(phoneField);
-
-        contentPanel.add(new JLabel("Date of Birth (YYYY-MM-DD):"));
-        JTextField dobField = new JTextField("1990-01-01");
-        contentPanel.add(dobField);
-
         contentPanel.add(new JLabel("Address:"));
         JTextField addressField = new JTextField();
         contentPanel.add(addressField);
 
-        dialog.add(contentPanel, BorderLayout.CENTER);
+        contentPanel.add(new JLabel("Postcode:"));
+        JTextField postcodeField = new JTextField();
+        contentPanel.add(postcodeField);
+
+        contentPanel.add(new JLabel("Emergency Contact Name:"));
+        JTextField emergencyNameField = new JTextField();
+        contentPanel.add(emergencyNameField);
+
+        contentPanel.add(new JLabel("Emergency Contact Phone:"));
+        JTextField emergencyPhoneField = new JTextField();
+        contentPanel.add(emergencyPhoneField);
+
+        contentPanel.add(new JLabel("GP Surgery ID:"));
+        JTextField gpSurgeryField = new JTextField("S001");
+        contentPanel.add(gpSurgeryField);
 
         JPanel buttonPanel = new JPanel();
-        JButton registerBtn = new JButton("Register");
+        JButton saveBtn = new JButton("Save Patient");
         JButton cancelBtn = new JButton("Cancel");
 
-        registerBtn.addActionListener(e -> {
+        saveBtn.addActionListener(e -> {
             try {
-                // Generate patient ID
+                if (firstNameField.getText().isEmpty() || lastNameField.getText().isEmpty() || 
+                    nhsNumberField.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Please fill in all required fields (First Name, Last Name, NHS Number)");
+                    return;
+                }
+
                 List<Patient> patients = dataManager.getPatients();
                 int maxId = 0;
                 for (Patient p : patients) {
@@ -124,10 +142,13 @@ public class ReceptionistDashboard extends JPanel {
 
                 Patient newPatient = new Patient(patientId, firstNameField.getText(), lastNameField.getText(), 
                                                 dobField.getText(), nhsNumberField.getText(), 
-                                                phoneField.getText(), emailField.getText());
+                                                (String) genderCombo.getSelectedItem(),
+                                                phoneField.getText(), emailField.getText(), 
+                                                addressField.getText(), postcodeField.getText(),
+                                                emergencyNameField.getText(), emergencyPhoneField.getText());
                 dataManager.addPatient(newPatient);
                 
-                JOptionPane.showMessageDialog(dialog, "Patient registered successfully!\nPatient ID: " + patientId);
+                JOptionPane.showMessageDialog(dialog, "Patient created successfully!\nPatient ID: " + patientId);
                 dialog.dispose();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -136,230 +157,182 @@ public class ReceptionistDashboard extends JPanel {
 
         cancelBtn.addActionListener(e -> dialog.dispose());
 
-        buttonPanel.add(registerBtn);
+        buttonPanel.add(saveBtn);
         buttonPanel.add(cancelBtn);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
     }
 
-    private void bookAppointmentDialog() {
-        List<Patient> patients = dataManager.getPatients();
-        
-        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Book Appointment", true);
-        dialog.setSize(400, 300);
+    private void viewPatientsDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "View Patients", true);
+        dialog.setSize(900, 500);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout(10, 10));
 
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new GridLayout(4, 2, 5, 10));
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        List<Patient> patients = dataManager.getPatients();
+        String[] columnNames = {"Patient ID", "First Name", "Last Name", "NHS Number", "DOB", "Gender", "Phone", "Email", "Address", "Postcode"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
 
-        // Patient selection
-        String[] patientNames = new String[patients.size()];
-        String[] patientIds = new String[patients.size()];
-        for (int i = 0; i < patients.size(); i++) {
-            patientNames[i] = patients.get(i).getFirstName() + " " + patients.get(i).getLastName();
-            patientIds[i] = patients.get(i).getId();
+        for (Patient p : patients) {
+            model.addRow(new Object[]{
+                p.getId(), p.getFirstName(), p.getLastName(), p.getNhsNumber(), 
+                p.getDob(), p.getGender(), p.getPhone(), p.getEmail(), 
+                p.getAddress(), p.getPostcode()
+            });
         }
 
-        contentPanel.add(new JLabel("Select Patient:"));
-        JComboBox<String> patientCombo = new JComboBox<>(patientNames);
-        contentPanel.add(patientCombo);
+        JTable table = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+        dialog.add(scrollPane, BorderLayout.CENTER);
 
-        // Clinician selection
-        String[] clinicianNames = {"Dr. David Thompson (GP)", "Dr. Helen Roberts (GP)", "Dr. Mark Davies (GP)", 
-                                   "Dr. Susan Clarke (GP)", "Dr. Richard Evans (Cardiology)", "Dr. Maria Rodriguez (Neurology)"};
-        String[] clinicianIds = {"C001", "C002", "C003", "C004", "C005", "C006"};
-
-        contentPanel.add(new JLabel("Select Clinician:"));
-        JComboBox<String> clinicianCombo = new JComboBox<>(clinicianNames);
-        contentPanel.add(clinicianCombo);
-
-        contentPanel.add(new JLabel("Appointment Date:"));
-        JTextField dateField = new JTextField("2025-01-20");
-        contentPanel.add(dateField);
-
-        contentPanel.add(new JLabel("Appointment Time:"));
-        JTextField timeField = new JTextField("14:00");
-        contentPanel.add(timeField);
-
-        dialog.add(contentPanel, BorderLayout.CENTER);
-
+        JButton closeBtn = new JButton("Close");
+        closeBtn.addActionListener(e -> dialog.dispose());
         JPanel buttonPanel = new JPanel();
-        JButton confirmBtn = new JButton("Book");
-        JButton cancelBtn = new JButton("Cancel");
-
-        confirmBtn.addActionListener(e -> {
-            try {
-                int patientIndex = patientCombo.getSelectedIndex();
-                int clinicianIndex = clinicianCombo.getSelectedIndex();
-                String patientId = patientIds[patientIndex];
-                String providerId = clinicianIds[clinicianIndex];
-                LocalDate date = LocalDate.parse(dateField.getText());
-                LocalTime time = LocalTime.parse(timeField.getText());
-                LocalDateTime appointmentTime = LocalDateTime.of(date, time);
-                
-                // Generate appointment ID
-                int maxId = 0;
-                for (Appointment a : dataManager.getAppointments()) {
-                    try {
-                        int id = Integer.parseInt(a.getId().substring(1));
-                        if (id > maxId) maxId = id;
-                    } catch (Exception ex) {}
-                }
-                String appointmentId = "A" + String.format("%03d", maxId + 1);
-
-                Appointment newAppointment = new Appointment(appointmentId, patientId, providerId, 
-                                                             appointmentTime, "Scheduled", "");
-                dataManager.addAppointment(newAppointment);
-                
-                JOptionPane.showMessageDialog(dialog, "Appointment booked successfully!\nAppointment ID: " + appointmentId);
-                dialog.dispose();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        cancelBtn.addActionListener(e -> dialog.dispose());
-
-        buttonPanel.add(confirmBtn);
-        buttonPanel.add(cancelBtn);
+        buttonPanel.add(closeBtn);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
     }
 
-    private void rescheduleAppointmentDialog() {
-        List<Appointment> allAppointments = dataManager.getAppointments();
-        java.util.List<Appointment> appointments = new java.util.ArrayList<>();
-        java.util.List<String> appointmentDisplay = new java.util.ArrayList<>();
+    private void viewStaffDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "View Staff", true);
+        dialog.setSize(1000, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
 
-        for (Appointment a : allAppointments) {
-            if (a.getStatus().equals("Scheduled")) {
-                appointments.add(a);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                appointmentDisplay.add(a.getId() + " - " + a.getPatientId() + " - " + a.getAppointmentTime().format(formatter));
-            }
-        }
+        List<Staff> staffList = dataManager.getStaffs();
+        String[] columnNames = {"Staff ID", "First Name", "Last Name", "Role", "Department", "Facility ID", "Phone", "Email", "Employment Status", "Start Date", "Line Manager", "Access Level"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
 
-        if (appointments.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No appointments available to reschedule");
-            return;
-        }
-
-        String[] options = appointmentDisplay.toArray(new String[0]);
-        int selectedIndex = JOptionPane.showOptionDialog(this, "Select appointment to reschedule:", 
-                                                        "Reschedule Appointment", JOptionPane.DEFAULT_OPTION, 
-                                                        JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-
-        if (selectedIndex >= 0) {
-            Appointment selectedAppt = appointments.get(selectedIndex);
-            
-            JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Reschedule Appointment", true);
-            dialog.setSize(350, 200);
-            dialog.setLocationRelativeTo(this);
-            dialog.setLayout(new BorderLayout(10, 10));
-
-            JPanel contentPanel = new JPanel();
-            contentPanel.setLayout(new GridLayout(2, 2, 5, 10));
-            contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-            contentPanel.add(new JLabel("New Date:"));
-            JTextField dateField = new JTextField("2025-01-20");
-            contentPanel.add(dateField);
-
-            contentPanel.add(new JLabel("New Time:"));
-            JTextField timeField = new JTextField("14:00");
-            contentPanel.add(timeField);
-
-            dialog.add(contentPanel, BorderLayout.CENTER);
-
-            JPanel buttonPanel = new JPanel();
-            JButton confirmBtn = new JButton("Reschedule");
-            JButton cancelBtn = new JButton("Cancel");
-
-            confirmBtn.addActionListener(e -> {
-                try {
-                    LocalDate date = LocalDate.parse(dateField.getText());
-                    LocalTime time = LocalTime.parse(timeField.getText());
-                    LocalDateTime newTime = LocalDateTime.of(date, time);
-                    selectedAppt.setAppointmentTime(newTime);
-                    dataManager.rewriteAppointmentsCSV();
-                    JOptionPane.showMessageDialog(dialog, "Appointment rescheduled successfully!");
-                    dialog.dispose();
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
+        for (Staff s : staffList) {
+            model.addRow(new Object[]{
+                s.getId(), s.getFirstName(), s.getLastName(), s.getRole(), 
+                s.getDepartment(), s.getFacilityId(), s.getPhone(), s.getEmail(), 
+                s.getEmploymentStatus(), s.getStartDate(), s.getLineManager(), s.getAccessLevel()
             });
-
-            cancelBtn.addActionListener(e -> dialog.dispose());
-
-            buttonPanel.add(confirmBtn);
-            buttonPanel.add(cancelBtn);
-            dialog.add(buttonPanel, BorderLayout.SOUTH);
-
-            dialog.setVisible(true);
         }
+
+        JTable table = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        JButton closeBtn = new JButton("Close");
+        closeBtn.addActionListener(e -> dialog.dispose());
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(closeBtn);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
     }
 
-    private void cancelAppointmentDialog() {
-        List<Appointment> allAppointments = dataManager.getAppointments();
-        java.util.List<Appointment> appointments = new java.util.ArrayList<>();
-        java.util.List<String> appointmentDisplay = new java.util.ArrayList<>();
+    private void viewCliniciansDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "View Clinicians", true);
+        dialog.setSize(1000, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
 
-        for (Appointment a : allAppointments) {
-            if (a.getStatus().equals("Scheduled")) {
-                appointments.add(a);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                appointmentDisplay.add(a.getId() + " - " + a.getPatientId() + " - " + a.getAppointmentTime().format(formatter));
-            }
+        List<Clinician> clinicians = dataManager.getClinicians();
+        String[] columnNames = {"Clinician ID", "First Name", "Last Name", "Title", "Specialty", "GMC Number", "Phone", "Email", "Workplace ID", "Workplace Type", "Employment Status", "Start Date"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+        for (Clinician c : clinicians) {
+            model.addRow(new Object[]{
+                c.getId(), c.getFirstName(), c.getLastName(), c.getTitle(), 
+                c.getSpecialty(), c.getGmcNumber(), c.getPhone(), c.getEmail(), 
+                c.getWorkplaceId(), c.getWorkplaceType(), c.getEmploymentStatus(), c.getStartDate()
+            });
         }
 
-        if (appointments.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No appointments to cancel");
-            return;
-        }
+        JTable table = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+        dialog.add(scrollPane, BorderLayout.CENTER);
 
-        String[] options = appointmentDisplay.toArray(new String[0]);
-        int selectedIndex = JOptionPane.showOptionDialog(this, "Select appointment to cancel:", 
-                                                        "Cancel Appointment", JOptionPane.DEFAULT_OPTION, 
-                                                        JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        JButton closeBtn = new JButton("Close");
+        closeBtn.addActionListener(e -> dialog.dispose());
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(closeBtn);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
 
-        if (selectedIndex >= 0) {
-            dataManager.cancelAppointment(appointments.get(selectedIndex).getId());
-            JOptionPane.showMessageDialog(this, "Appointment cancelled successfully!");
-        }
+        dialog.setVisible(true);
     }
 
-    private void checkInPatientDialog() {
-        List<Appointment> allAppointments = dataManager.getAppointments();
-        java.util.List<Appointment> appointments = new java.util.ArrayList<>();
-        java.util.List<String> appointmentDisplay = new java.util.ArrayList<>();
+    private void viewAppointmentsDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "View Appointments", true);
+        dialog.setSize(700, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
 
-        for (Appointment a : allAppointments) {
-            if (a.getStatus().equals("Scheduled")) {
-                appointments.add(a);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                appointmentDisplay.add(a.getId() + " - " + a.getPatientId() + " - " + a.getAppointmentTime().format(formatter));
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        filterPanel.add(new JLabel("Filter by Patient NHS Number:"));
+        JComboBox<String> nhsCombo = new JComboBox<>();
+        
+        List<Patient> patients = dataManager.getPatients();
+        nhsCombo.addItem("All Patients");
+        for (Patient p : patients) {
+            nhsCombo.addItem(p.getNhsNumber() + " - " + p.getFirstName() + " " + p.getLastName());
+        }
+        
+        filterPanel.add(nhsCombo);
+        dialog.add(filterPanel, BorderLayout.NORTH);
+
+        String[] columnNames = {"Appointment ID", "Patient ID", "Provider ID", "Date/Time", "Status", "Notes"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+        JTable table = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        nhsCombo.addActionListener(e -> {
+            model.setRowCount(0);
+            List<Appointment> appointments = dataManager.getAppointments();
+            
+            if (nhsCombo.getSelectedIndex() == 0) {
+                // Show all appointments
+                for (Appointment a : appointments) {
+                    model.addRow(new Object[]{
+                        a.getId(), a.getPatientId(), a.getProviderId(), 
+                        a.getAppointmentTime(), a.getStatus(), a.getNotes()
+                    });
+                }
+            } else {
+                // Filter by selected NHS number
+                String selectedNHS = nhsCombo.getSelectedItem().toString().split(" - ")[0];
+                Patient selectedPatient = null;
+                for (Patient p : patients) {
+                    if (p.getNhsNumber().equals(selectedNHS)) {
+                        selectedPatient = p;
+                        break;
+                    }
+                }
+                
+                if (selectedPatient != null) {
+                    for (Appointment a : appointments) {
+                        if (a.getPatientId().equals(selectedPatient.getId())) {
+                            model.addRow(new Object[]{
+                                a.getId(), a.getPatientId(), a.getProviderId(), 
+                                a.getAppointmentTime(), a.getStatus(), a.getNotes()
+                            });
+                        }
+                    }
+                }
             }
+        });
+
+        // Load all appointments initially
+        List<Appointment> appointments = dataManager.getAppointments();
+        for (Appointment a : appointments) {
+            model.addRow(new Object[]{
+                a.getId(), a.getPatientId(), a.getProviderId(), 
+                a.getAppointmentTime(), a.getStatus(), a.getNotes()
+            });
         }
 
-        if (appointments.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No patients to check in");
-            return;
-        }
+        JButton closeBtn = new JButton("Close");
+        closeBtn.addActionListener(e -> dialog.dispose());
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(closeBtn);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
 
-        String[] options = appointmentDisplay.toArray(new String[0]);
-        int selectedIndex = JOptionPane.showOptionDialog(this, "Select patient to check in:", 
-                                                        "Check-In Patient", JOptionPane.DEFAULT_OPTION, 
-                                                        JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-
-        if (selectedIndex >= 0) {
-            Appointment appt = appointments.get(selectedIndex);
-            appt.setStatus("CheckedIn");
-            dataManager.rewriteAppointmentsCSV();
-            JOptionPane.showMessageDialog(this, "Patient checked in successfully!\nPatient: " + appt.getPatientId());
-        }
+        dialog.setVisible(true);
     }
 }

@@ -3,6 +3,8 @@ package view;
 import model.User;
 import model.DataManager;
 import model.AuditLog;
+import model.Staff;
+import model.Clinician;
 import util.AccessControl;
 import view.UserRole;
 import javax.swing.*;
@@ -25,7 +27,7 @@ public class AdminDashboard extends JPanel {
         add(title, BorderLayout.NORTH);
 
         // Button panel
-        JPanel buttonPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 3, 10, 10));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         if (AccessControl.hasPermission(UserRole.ADMIN, "MANAGE_USERS")) {
@@ -39,6 +41,14 @@ public class AdminDashboard extends JPanel {
             btnAssignRoles.addActionListener(e -> assignRolesDialog());
             buttonPanel.add(btnAssignRoles);
         }
+
+        JButton btnManageStaff = new JButton("Manage Staff");
+        btnManageStaff.addActionListener(e -> manageStaffDialog());
+        buttonPanel.add(btnManageStaff);
+
+        JButton btnManageClinicians = new JButton("Manage Clinicians");
+        btnManageClinicians.addActionListener(e -> manageClinicianDialog());
+        buttonPanel.add(btnManageClinicians);
 
         if (AccessControl.hasPermission(UserRole.ADMIN, "VIEW_LOGS")) {
             JButton btnViewLogs = new JButton("View System Logs");
@@ -262,6 +272,240 @@ public class AdminDashboard extends JPanel {
         buttonPanel.add(cancelBtn);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
+        dialog.setVisible(true);
+    }
+
+    private void manageStaffDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Manage Staff", true);
+        dialog.setSize(700, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        // Table to display staff
+        DefaultTableModel staffModel = new DefaultTableModel(new String[]{"ID", "First Name", "Last Name", "Role", "Department", "Status"}, 0);
+        List<Staff> staffs = dataManager.getStaffs();
+        for (Staff s : staffs) {
+            staffModel.addRow(new Object[]{s.getId(), s.getFirstName(), s.getLastName(), s.getRole(), s.getDepartment(), s.getEmploymentStatus()});
+        }
+        JTable staffTable = new JTable(staffModel);
+        JScrollPane scrollPane = new JScrollPane(staffTable);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+
+        JButton btnAddStaff = new JButton("Add Staff");
+        btnAddStaff.addActionListener(e -> {
+            JDialog addDialog = new JDialog(dialog, "Add Staff Member", true);
+            addDialog.setSize(500, 700);
+            addDialog.setLocationRelativeTo(dialog);
+            addDialog.setLayout(new BorderLayout(10, 10));
+            
+            JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10));
+            formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            
+            JTextField txtId = new JTextField();
+            JTextField txtFName = new JTextField();
+            JTextField txtLName = new JTextField();
+            JTextField txtRole = new JTextField();
+            JTextField txtPhone = new JTextField();
+            JTextField txtEmail = new JTextField();
+            JTextField txtStart = new JTextField("2026-01-14");
+            
+            // Dropdown for Department
+            String[] departments = {"Administration", "Front Desk", "Clinical Support", "Ward", "Support Services", "Other"};
+            JComboBox<String> comboDept = new JComboBox<>(departments);
+            
+            // Dropdown for Facility ID
+            String[] facilities = {"S001", "S002", "S003", "H001", "H002", "H003"};
+            JComboBox<String> comboFacility = new JComboBox<>(facilities);
+            
+            // Dropdown for Line Manager
+            String[] managers = {"Dr. David Thompson", "Michelle Adams", "Dr. Mark Davies", "Sandra Brown", "Dr. Susan Clarke", "Margaret Taylor", "David Thompson", "Sarah Mitchell", "Michael Brown", "Emma Thompson"};
+            JComboBox<String> comboManager = new JComboBox<>(managers);
+            
+            // Radio buttons for Employment Status
+            JRadioButton radioFullTime = new JRadioButton("Full-time", true);
+            JRadioButton radioPartTime = new JRadioButton("Part-time");
+            ButtonGroup groupStatus = new ButtonGroup();
+            groupStatus.add(radioFullTime);
+            groupStatus.add(radioPartTime);
+            JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            statusPanel.add(radioFullTime);
+            statusPanel.add(radioPartTime);
+            
+            // Dropdown for Access Level
+            String[] accessLevels = {"Basic", "Standard", "Advanced", "Manager", "Administrator"};
+            JComboBox<String> comboAccess = new JComboBox<>(accessLevels);
+            comboAccess.setSelectedItem("Standard");
+            
+            formPanel.add(new JLabel("Staff ID:"));
+            formPanel.add(txtId);
+            formPanel.add(new JLabel("First Name:"));
+            formPanel.add(txtFName);
+            formPanel.add(new JLabel("Last Name:"));
+            formPanel.add(txtLName);
+            formPanel.add(new JLabel("Role:"));
+            formPanel.add(txtRole);
+            formPanel.add(new JLabel("Department:"));
+            formPanel.add(comboDept);
+            formPanel.add(new JLabel("Facility ID:"));
+            formPanel.add(comboFacility);
+            formPanel.add(new JLabel("Phone:"));
+            formPanel.add(txtPhone);
+            formPanel.add(new JLabel("Email:"));
+            formPanel.add(txtEmail);
+            formPanel.add(new JLabel("Employment Status:"));
+            formPanel.add(statusPanel);
+            formPanel.add(new JLabel("Start Date:"));
+            formPanel.add(txtStart);
+            formPanel.add(new JLabel("Line Manager:"));
+            formPanel.add(comboManager);
+            formPanel.add(new JLabel("Access Level:"));
+            formPanel.add(comboAccess);
+            
+            JScrollPane sp = new JScrollPane(formPanel);
+            addDialog.add(sp, BorderLayout.CENTER);
+            
+            JPanel actionPanel = new JPanel(new FlowLayout());
+            JButton btnSubmit = new JButton("Add");
+            btnSubmit.addActionListener(ev -> {
+                String status = radioFullTime.isSelected() ? "Full-time" : "Part-time";
+                Staff newStaff = new Staff(txtId.getText(), txtFName.getText(), txtLName.getText(),
+                    txtRole.getText(), (String)comboDept.getSelectedItem(), (String)comboFacility.getSelectedItem(), txtPhone.getText(),
+                    txtEmail.getText(), status, txtStart.getText(), (String)comboManager.getSelectedItem(), (String)comboAccess.getSelectedItem());
+                dataManager.addStaff(newStaff);
+                staffModel.addRow(new Object[]{newStaff.getId(), newStaff.getFirstName(), newStaff.getLastName(), 
+                    newStaff.getRole(), newStaff.getDepartment(), newStaff.getEmploymentStatus()});
+                JOptionPane.showMessageDialog(addDialog, "Staff added successfully!");
+                addDialog.dispose();
+            });
+            actionPanel.add(btnSubmit);
+            JButton btnCancel = new JButton("Cancel");
+            btnCancel.addActionListener(ev -> addDialog.dispose());
+            actionPanel.add(btnCancel);
+            addDialog.add(actionPanel, BorderLayout.SOUTH);
+            addDialog.setVisible(true);
+        });
+        buttonPanel.add(btnAddStaff);
+
+        JButton btnClose = new JButton("Close");
+        btnClose.addActionListener(e -> dialog.dispose());
+        buttonPanel.add(btnClose);
+
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private void manageClinicianDialog() {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(this), "Manage Clinicians", true);
+        dialog.setSize(700, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        // Table to display clinicians
+        DefaultTableModel clinModel = new DefaultTableModel(new String[]{"ID", "First Name", "Last Name", "Title", "Specialty", "Status"}, 0);
+        List<Clinician> clinicians = dataManager.getClinicians();
+        for (Clinician c : clinicians) {
+            clinModel.addRow(new Object[]{c.getId(), c.getFirstName(), c.getLastName(), c.getTitle(), c.getSpecialty(), c.getEmploymentStatus()});
+        }
+        JTable clinTable = new JTable(clinModel);
+        JScrollPane scrollPane = new JScrollPane(clinTable);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+
+        JButton btnAddClin = new JButton("Add Clinician");
+        btnAddClin.addActionListener(e -> {
+            JDialog addDialog = new JDialog(dialog, "Add Clinician", true);
+            addDialog.setSize(450, 600);
+            addDialog.setLocationRelativeTo(dialog);
+            
+            JPanel panel = new JPanel(new GridLayout(13, 2, 10, 10));
+            panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            
+            JTextField txtId = new JTextField();
+            JTextField txtFName = new JTextField();
+            JTextField txtLName = new JTextField();
+            JTextField txtTitle = new JTextField("Dr.");
+            JTextField txtGMC = new JTextField();
+            JTextField txtPhone = new JTextField();
+            JTextField txtEmail = new JTextField();
+            JTextField txtWorkplace = new JTextField();
+            JTextField txtStart = new JTextField("2026-01-14");
+            
+            // Dropdown for Specialty
+            String[] specialties = {"General Practice", "Cardiology", "Neurology", "Orthopaedics", "Dermatology", "Gastroenterology", "General Nursing", "Practice Nursing"};
+            JComboBox<String> comboSpecialty = new JComboBox<>(specialties);
+            
+            // Dropdown for Workplace Type
+            String[] workplaceTypes = {"GP Surgery", "Hospital", "Community Clinic", "Private Practice"};
+            JComboBox<String> comboWorkType = new JComboBox<>(workplaceTypes);
+            
+            // Radio buttons for Employment Status
+            JRadioButton radioFullTime = new JRadioButton("Full-time", true);
+            JRadioButton radioPartTime = new JRadioButton("Part-time");
+            ButtonGroup groupStatus = new ButtonGroup();
+            groupStatus.add(radioFullTime);
+            groupStatus.add(radioPartTime);
+            JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            statusPanel.add(radioFullTime);
+            statusPanel.add(radioPartTime);
+            
+            panel.add(new JLabel("Clinician ID:"));
+            panel.add(txtId);
+            panel.add(new JLabel("First Name:"));
+            panel.add(txtFName);
+            panel.add(new JLabel("Last Name:"));
+            panel.add(txtLName);
+            panel.add(new JLabel("Title:"));
+            panel.add(txtTitle);
+            panel.add(new JLabel("Specialty:"));
+            panel.add(comboSpecialty);
+            panel.add(new JLabel("GMC Number:"));
+            panel.add(txtGMC);
+            panel.add(new JLabel("Phone:"));
+            panel.add(txtPhone);
+            panel.add(new JLabel("Email:"));
+            panel.add(txtEmail);
+            panel.add(new JLabel("Workplace ID:"));
+            panel.add(txtWorkplace);
+            panel.add(new JLabel("Workplace Type:"));
+            panel.add(comboWorkType);
+            panel.add(new JLabel("Employment Status:"));
+            panel.add(statusPanel);
+            panel.add(new JLabel("Start Date:"));
+            panel.add(txtStart);
+            
+            JScrollPane sp = new JScrollPane(panel);
+            addDialog.add(sp, BorderLayout.CENTER);
+            
+            JPanel actionPanel = new JPanel(new FlowLayout());
+            JButton btnSubmit = new JButton("Add");
+            btnSubmit.addActionListener(ev -> {
+                String status = radioFullTime.isSelected() ? "Full-time" : "Part-time";
+                Clinician newClin = new Clinician(txtId.getText(), txtFName.getText(), txtLName.getText(),
+                    txtTitle.getText(), (String)comboSpecialty.getSelectedItem(), txtGMC.getText(), txtPhone.getText(),
+                    txtEmail.getText(), txtWorkplace.getText(), (String)comboWorkType.getSelectedItem(), status, txtStart.getText());
+                dataManager.addClinician(newClin);
+                clinModel.addRow(new Object[]{newClin.getId(), newClin.getFirstName(), newClin.getLastName(), 
+                    newClin.getTitle(), newClin.getSpecialty(), newClin.getEmploymentStatus()});
+                JOptionPane.showMessageDialog(addDialog, "Clinician added successfully!");
+                addDialog.dispose();
+            });
+            actionPanel.add(btnSubmit);
+            JButton btnCancel = new JButton("Cancel");
+            btnCancel.addActionListener(ev -> addDialog.dispose());
+            actionPanel.add(btnCancel);
+            addDialog.add(actionPanel, BorderLayout.SOUTH);
+            addDialog.setVisible(true);
+        });
+        buttonPanel.add(btnAddClin);
+
+        JButton btnClose = new JButton("Close");
+        btnClose.addActionListener(e -> dialog.dispose());
+        buttonPanel.add(btnClose);
+
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
 }

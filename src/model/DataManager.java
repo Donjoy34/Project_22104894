@@ -4,8 +4,6 @@ import util.CSVUtils;
 import view.UserRole;
 import java.io.*;
 import java.util.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class DataManager {
     private List<Patient> patients = new ArrayList<>();
@@ -14,6 +12,8 @@ public class DataManager {
     private List<User> users = new ArrayList<>();
     private List<AuditLog> auditLogs = new ArrayList<>();
     private List<Appointment> appointments = new ArrayList<>();
+    private List<Staff> staffs = new ArrayList<>();
+    private List<Clinician> clinicians = new ArrayList<>();
 
     private final String DB_PATH = "database/";
 
@@ -24,16 +24,22 @@ public class DataManager {
         loadUsers();
         loadAuditLogs();
         loadAppointments();
+        loadStaffs();
+        loadClinicians();
     }
 
-    private void loadPatients() {
+    public void reloadUsers() {
+        users.clear();
+        loadUsers();
+    }    private void loadPatients() {
         try (BufferedReader br = new BufferedReader(new FileReader(DB_PATH + "patients.csv"))) {
             String line;
             br.readLine(); // skip header
             while ((line = br.readLine()) != null) {
                 List<String> data = CSVUtils.parseLine(line);
-                if(data.size() > 2) {
-                    patients.add(new Patient(data.get(0), data.get(1), data.get(2), data.get(3), data.get(4), data.get(6), data.get(8)));
+                if(data.size() > 7) {
+                    Patient p = new Patient(data.get(0), data.get(1), data.get(2), data.get(3), data.get(4), data.get(6), data.get(7));
+                    patients.add(p);
                 }
             }
         } catch (IOException e) { e.printStackTrace(); }
@@ -70,9 +76,14 @@ public class DataManager {
             String line;
             br.readLine(); // skip header
             while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) continue; // Skip empty lines
                 List<String> data = CSVUtils.parseLine(line);
                 if(data.size() > 3) {
-                    users.add(new User(data.get(0), data.get(1), data.get(2), UserRole.valueOf(data.get(3))));
+                    String id = data.get(0).trim();
+                    String username = data.get(1).trim();
+                    String password = data.get(2).trim();
+                    String roleStr = data.get(3).trim();
+                    users.add(new User(id, username, password, UserRole.valueOf(roleStr)));
                 }
             }
         } catch (IOException e) { e.printStackTrace(); }
@@ -121,6 +132,7 @@ public class DataManager {
     private void appendToFile(String filename, String data) {
         try (PrintWriter pw = new PrintWriter(new FileWriter(DB_PATH + filename, true))) {
             pw.println(data);
+            pw.flush();
         } catch (IOException e) { e.printStackTrace(); }
     }
 
@@ -128,27 +140,80 @@ public class DataManager {
     public List<AuditLog> getAuditLogs() { return auditLogs; }
 
     public User authenticate(String username, String password, UserRole role) {
-        String hash = hashPassword(password);
         for (User u : users) {
-            if (u.getUsername().equals(username) && u.getPasswordHash().equals(hash) && u.getRole() == role) {
+            if (u.getUsername().equals(username) && u.getPasswordHash().equals(password) && u.getRole() == role) {
                 return u;
             }
         }
         return null;
     }
 
-    public String hashPassword(String password) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(password.getBytes());
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
-                sb.append(String.format("%02x", b));
+    // Patient NHS-based authentication
+    public Patient authenticatePatientByNHS(String nhsNumber, String password) {
+        for (User u : users) {
+            if (u.getRole() == UserRole.PATIENT) {
+                // Check if this patient's NHS number matches
+                for (Patient p : patients) {
+                    if (p.getNhsNumber().equals(nhsNumber) && p.getId().equals(u.getUsername())) {
+                        if (u.getPasswordHash().equals(password)) {
+                            return p;
+                        }
+                    }
+                }
             }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
         }
+        return null;
+    }
+
+    // Check if NHS number exists (for patient self-registration)
+    public Patient findPatientByNHS(String nhsNumber) {
+        for (Patient p : patients) {
+            if (p.getNhsNumber().equals(nhsNumber)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    // Check if patient already has login credentials (has registered)
+    public boolean isPatientRegistered(String patientId) {
+        for (User u : users) {
+            if (u.getUsername().equals(patientId) && u.getRole() == UserRole.PATIENT) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Register patient with NHS number and create password
+    public void registerPatientWithPassword(String patientId, String password) {
+        String hash = hashPassword(password);
+        User patientUser = new User(patientId, patientId, hash, UserRole.PATIENT);
+        addUser(patientUser);
+    }
+
+    public String hashPassword(String password) {
+        return password;
+    }
+
+    public User authenticateStaff(String staffId, String password) {
+        // Check if staff ID exists in users.csv with matching password
+        for (User u : users) {
+            if (u.getUsername().trim().equals(staffId.trim()) && u.getPasswordHash().trim().equals(password.trim())) {
+                return u;
+            }
+        }
+        return null;
+    }
+
+    public User authenticateClinician(String clinicianId, String password) {
+        // Check if clinician ID exists in users.csv with matching password
+        for (User u : users) {
+            if (u.getUsername().trim().equals(clinicianId.trim()) && u.getPasswordHash().trim().equals(password.trim())) {
+                return u;
+            }
+        }
+        return null;
     }
 
     private void loadAppointments() {
@@ -209,4 +274,108 @@ public class DataManager {
     public List<Referral> getReferrals() { return referrals; }
     public List<Appointment> getAppointments() { return appointments; }
     public List<Prescription> getPrescriptions() { return prescriptions; }
+    public List<Staff> getStaffs() { return staffs; }
+    public List<Clinician> getClinicians() { return clinicians; }
+
+    private void loadStaffs() {
+        try (BufferedReader br = new BufferedReader(new FileReader(DB_PATH + "staff.csv"))) {
+            String line;
+            br.readLine(); // skip header
+            while ((line = br.readLine()) != null) {
+                List<String> data = CSVUtils.parseLine(line);
+                if(data.size() > 11) {
+                    Staff s = new Staff(data.get(0), data.get(1), data.get(2), data.get(3), data.get(4),
+                                       data.get(5), data.get(6), data.get(7), data.get(8),
+                                       data.get(9), data.get(10), data.get(11));
+                    staffs.add(s);
+                }
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    private void loadClinicians() {
+        try (BufferedReader br = new BufferedReader(new FileReader(DB_PATH + "clinicians.csv"))) {
+            String line;
+            br.readLine(); // skip header
+            while ((line = br.readLine()) != null) {
+                List<String> data = CSVUtils.parseLine(line);
+                if(data.size() > 11) {
+                    Clinician c = new Clinician(data.get(0), data.get(1), data.get(2), data.get(3), data.get(4),
+                                               data.get(5), data.get(6), data.get(7), data.get(8),
+                                               data.get(9), data.get(10), data.get(11));
+                    clinicians.add(c);
+                }
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    public void addStaff(Staff s) {
+        staffs.add(s);
+        appendToFile("staff.csv", s.toCSV());
+    }
+
+    public void addClinician(Clinician c) {
+        clinicians.add(c);
+        appendToFile("clinicians.csv", c.toCSV());
+    }
+
+    public Staff findStaffById(String staffId) {
+        for (Staff s : staffs) {
+            if (s.getId().equals(staffId)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    public Clinician findClinicianById(String clinicianId) {
+        for (Clinician c : clinicians) {
+            if (c.getId().equals(clinicianId)) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    public boolean isStaffRegistered(String staffId) {
+        for (User u : users) {
+            if (u.getUsername().equals(staffId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isClinicianRegistered(String clinicianId) {
+        for (User u : users) {
+            if (u.getUsername().equals(clinicianId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void registerStaffWithPassword(String staffId, String password) {
+        String userId = "US" + (1000 + users.size());
+        User u = new User(userId, staffId, password, UserRole.valueOf("GP")); // Default to GP, can be changed
+        users.add(u);
+        appendToFile("users.csv", u.toCSV());
+        reloadUsers();
+    }
+
+    public void registerClinicianWithPassword(String clinicianId, String password) {
+        String userId = "UC" + (1000 + users.size());
+        User u = new User(userId, clinicianId, password, UserRole.valueOf("SPECIALIST")); // Default to SPECIALIST
+        users.add(u);
+        appendToFile("users.csv", u.toCSV());
+        reloadUsers();
+    }
+
+    public void registerReceptionistWithPassword(String staffId, String password) {
+        String userId = "UR" + (1000 + users.size());
+        User u = new User(userId, staffId, password, UserRole.valueOf("RECEPTIONIST")); // Default to RECEPTIONIST
+        users.add(u);
+        appendToFile("users.csv", u.toCSV());
+        reloadUsers();
+    }
 }

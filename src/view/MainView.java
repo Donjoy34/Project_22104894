@@ -146,20 +146,26 @@ public class MainView extends JFrame {
         lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
         add(lblTitle, BorderLayout.NORTH);
 
-        JPanel panelButtons = new JPanel(new GridLayout(1, 5, 10, 10));
+        JPanel panelButtons = new JPanel(new GridLayout(2, 3, 10, 10));
         panelButtons.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JButton btnPatient = new JButton("Patient");
         JButton btnGP = new JButton("GP");
+        JButton btnSpecialist = new JButton("Specialist");
         JButton btnNurse = new JButton("Nurse");
         JButton btnReceptionist = new JButton("Receptionist");
         JButton btnAdmin = new JButton("Admin");
 
-        btnPatient.setPreferredSize(new Dimension(50, 20));
+        btnPatient.setPreferredSize(new Dimension(120, 60));
         btnGP.setPreferredSize(new Dimension(120, 60));
+        btnSpecialist.setPreferredSize(new Dimension(120, 60));
+        btnNurse.setPreferredSize(new Dimension(120, 60));
+        btnReceptionist.setPreferredSize(new Dimension(120, 60));
+        btnAdmin.setPreferredSize(new Dimension(120, 60));
 
         panelButtons.add(btnPatient);
         panelButtons.add(btnGP);
+        panelButtons.add(btnSpecialist);
         panelButtons.add(btnNurse);
         panelButtons.add(btnReceptionist);
         panelButtons.add(btnAdmin);
@@ -169,6 +175,7 @@ public class MainView extends JFrame {
         // Button actions
         btnPatient.addActionListener(e -> openLogin(UserRole.PATIENT));
         btnGP.addActionListener(e -> openLogin(UserRole.GP));
+        btnSpecialist.addActionListener(e -> openLogin(UserRole.SPECIALIST));
         btnNurse.addActionListener(e -> openLogin(UserRole.NURSE));
         btnReceptionist.addActionListener(e -> openLogin(UserRole.RECEPTIONIST));
         btnAdmin.addActionListener(e -> openLogin(UserRole.ADMIN));
